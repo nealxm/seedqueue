@@ -105,8 +105,8 @@ public class SeedQueueConfig implements SpeedrunConfig {
     public int previewFPS = 15;
 
     @Config.Category("performance")
-    @Config.Numbers.Whole.Bounds(min = 0, max = 30)
-    public int backgroundPreviews = AUTO;
+    @Config.Numbers.Whole.Bounds(min = -1, max = 30, enforce = Config.Numbers.EnforceBounds.MIN_ONLY)
+    public int backgroundPreviews = -1;
 
     @Config.Category("performance")
     public boolean freezeLockedPreviews = false;
@@ -182,9 +182,10 @@ public class SeedQueueConfig implements SpeedrunConfig {
     }
 
     public int getBackgroundPreviews() {
-        if (this.backgroundPreviews == AUTO) {
+        if (this.backgroundPreviews == -1) {
             int mainGroupSize = this.rows * this.columns;
-            return Math.min(mainGroupSize, this.maxCapacity - mainGroupSize);
+            int preparingGroupSize = this.maxCapacity - mainGroupSize;
+            return Math.min(mainGroupSize + preparingGroupSize, this.maxCapacity - mainGroupSize);
         }
         return this.backgroundPreviews;
     }
