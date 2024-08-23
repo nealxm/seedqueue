@@ -181,6 +181,11 @@ public class SeedQueueConfig implements SpeedrunConfig {
         SeedQueue.config = this;
     }
 
+    /**
+     * Calculates a sane default for background previews if set to -1, works same as {@link SeedQueueConfig#AUTO}.
+     *
+     * @return The amount of background previews to be shown on the Wall Screen.
+     */
     public int getBackgroundPreviews() {
         if (this.backgroundPreviews == -1) {
             int mainGroupSize = this.rows * this.columns;
