@@ -87,7 +87,7 @@ public class SeedQueueWallScreen extends Screen {
         super(LiteralText.EMPTY);
         this.createWorldScreen = createWorldScreen;
         this.debugHud = SeedQueue.config.showDebugMenu ? new DebugHud(MinecraftClient.getInstance()) : null;
-        this.preparingPreviews = new ArrayList<>(SeedQueue.config.backgroundPreviews);
+        this.preparingPreviews = new ArrayList<>(Math.toIntExact(SeedQueue.config.getBackgroundPreviews()));
         this.lastSettingsCache = this.settingsCache = SeedQueueSettingsCache.create();
     }
 

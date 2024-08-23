@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import me.contaria.seedqueue.compat.ModCompat;
+import me.contaria.seedqueue.customization.Layout;
 import me.contaria.seedqueue.gui.config.SeedQueueKeybindingsScreen;
 import me.contaria.seedqueue.gui.config.SeedQueueWindowSizeWidget;
 import me.contaria.seedqueue.keybindings.SeedQueueKeyBindings;
@@ -105,8 +106,8 @@ public class SeedQueueConfig implements SpeedrunConfig {
     public int previewFPS = 15;
 
     @Config.Category("performance")
-    @Config.Numbers.Whole.Bounds(min = 0, max = 30)
-    public int backgroundPreviews = 0;
+    @Config.Numbers.Whole.Bounds(min = 0, max = 30, enforce = Config.Numbers.EnforceBounds.MIN_ONLY)
+    public int backgroundPreviews = AUTO;
 
     @Config.Category("performance")
     public boolean freezeLockedPreviews = false;
@@ -218,6 +219,16 @@ public class SeedQueueConfig implements SpeedrunConfig {
             return Math.min(Math.max(2, (int) Math.ceil((double) PROCESSORS / this.maxConcurrently_onWall)), PROCESSORS);
         }
         return this.chunkUpdateThreads;
+    }
+
+    public long getBackgroundPreviews() {
+        if (this.backgroundPreviews == AUTO) {
+            int mainPreviews = Layout.main.size();
+            Layout.Group[] groupOfPreparingPreviews = Layout.preparing;
+
+            return Math.min(mainPreviews, maxCapacity - mainPreviews);
+        }
+        return this.backgroundPreviews;
     }
 
     public boolean shouldUseWall() {

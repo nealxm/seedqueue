@@ -13,10 +13,10 @@ import java.nio.charset.StandardCharsets;
 
 public class Layout {
     @NotNull
-    public final Group main;
+    public static Group main;
     @Nullable
     public final Group locked;
-    public final Group[] preparing;
+    public static Group[] preparing;
     public final boolean replaceLockedInstances;
 
     private Layout(@NotNull Group main) {
