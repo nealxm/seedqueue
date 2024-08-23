@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import me.contaria.seedqueue.compat.ModCompat;
-import me.contaria.seedqueue.customization.Layout;
 import me.contaria.seedqueue.gui.config.SeedQueueKeybindingsScreen;
 import me.contaria.seedqueue.gui.config.SeedQueueWindowSizeWidget;
 import me.contaria.seedqueue.keybindings.SeedQueueKeyBindings;
@@ -106,8 +105,8 @@ public class SeedQueueConfig implements SpeedrunConfig {
     public int previewFPS = 15;
 
     @Config.Category("performance")
-    @Config.Numbers.Whole.Bounds(min = 0, max = 30, enforce = Config.Numbers.EnforceBounds.MIN_ONLY)
-    public int backgroundPreviews = AUTO;
+    @Config.Numbers.Whole.Bounds(min = -1, max = 30, enforce = Config.Numbers.EnforceBounds.MIN_ONLY)
+    public int backgroundPreviews = -1;
 
     @Config.Category("performance")
     public boolean freezeLockedPreviews = false;
@@ -182,6 +181,15 @@ public class SeedQueueConfig implements SpeedrunConfig {
         SeedQueue.config = this;
     }
 
+    public int getBackgroundPreviews() {
+        if (this.backgroundPreviews == -1) {
+            int mainGroupSize = this.rows * this.columns;
+            int preparingGroupSize = this.maxCapacity - mainGroupSize;
+            return Math.min(mainGroupSize + preparingGroupSize, this.maxCapacity - mainGroupSize);
+        }
+        return this.backgroundPreviews;
+    }
+
     /**
      * Returns the amount of threads the Background Executor should use according to {@link SeedQueueConfig#backgroundExecutorThreads}.
      * Calculates a good default based on {@link SeedQueueConfig#maxConcurrently} if set to {@link SeedQueueConfig#AUTO}.
@@ -219,14 +227,6 @@ public class SeedQueueConfig implements SpeedrunConfig {
             return Math.min(Math.max(2, (int) Math.ceil((double) PROCESSORS / this.maxConcurrently_onWall)), PROCESSORS);
         }
         return this.chunkUpdateThreads;
-    }
-
-    public long getBackgroundPreviews() {
-        if (this.backgroundPreviews == AUTO) {
-            int mainPreviews = Layout.main.size();
-            return Math.min(mainPreviews, maxCapacity - mainPreviews);
-        }
-        return this.backgroundPreviews;
     }
 
     public boolean shouldUseWall() {
