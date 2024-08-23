@@ -224,8 +224,6 @@ public class SeedQueueConfig implements SpeedrunConfig {
     public long getBackgroundPreviews() {
         if (this.backgroundPreviews == AUTO) {
             int mainPreviews = Layout.main.size();
-            Layout.Group[] groupOfPreparingPreviews = Layout.preparing;
-
             return Math.min(mainPreviews, maxCapacity - mainPreviews);
         }
         return this.backgroundPreviews;
