@@ -28,7 +28,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Config class based on SpeedrunAPI, initialized on prelaunch.
@@ -187,11 +186,13 @@ public class SeedQueueConfig implements SpeedrunConfig {
      *
      * @return The amount of background previews to be shown on the Wall Screen.
      */
-    public Optional<Integer> getBackgroundPreviews() {
+    public int getBackgroundPreviews() {
         if (this.backgroundPreviews == -1) {
-            return Optional.empty();
+            int mainGroupSize = this.rows * this.columns;
+            int preparingGroupSize = this.maxCapacity - mainGroupSize;
+            return Math.min(mainGroupSize + preparingGroupSize, this.maxCapacity - mainGroupSize);
         }
-        return Optional.of(this.backgroundPreviews);
+        return this.backgroundPreviews;
     }
 
     /**
