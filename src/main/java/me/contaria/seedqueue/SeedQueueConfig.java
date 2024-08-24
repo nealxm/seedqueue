@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive;
 import me.contaria.seedqueue.compat.ModCompat;
 import me.contaria.seedqueue.gui.config.SeedQueueKeybindingsScreen;
 import me.contaria.seedqueue.gui.config.SeedQueueWindowSizeWidget;
+import me.contaria.seedqueue.gui.wall.SeedQueueWallScreen;
 import me.contaria.seedqueue.keybindings.SeedQueueKeyBindings;
 import me.contaria.seedqueue.keybindings.SeedQueueMultiKeyBinding;
 import net.minecraft.client.MinecraftClient;
@@ -105,7 +106,7 @@ public class SeedQueueConfig implements SpeedrunConfig {
     public int previewFPS = 15;
 
     @Config.Category("performance")
-    @Config.Numbers.Whole.Bounds(min = -1, max = 30, enforce = Config.Numbers.EnforceBounds.MIN_ONLY)
+    @Config.Numbers.Whole.Bounds(min = -1, max = 30)
     public int backgroundPreviews = -1;
 
     @Config.Category("performance")
@@ -188,8 +189,8 @@ public class SeedQueueConfig implements SpeedrunConfig {
      */
     public int getBackgroundPreviews() {
         if (this.backgroundPreviews == -1) {
-            int mainGroupSize = this.rows * this.columns;
-            int preparingGroupSize = this.maxCapacity - mainGroupSize;
+            int mainGroupSize = SeedQueueWallScreen.layout.main.size();
+            int preparingGroupSize = SeedQueueWallScreen.layout.preparing.length;
             return Math.min(mainGroupSize + preparingGroupSize, this.maxCapacity - mainGroupSize);
         }
         return this.backgroundPreviews;
