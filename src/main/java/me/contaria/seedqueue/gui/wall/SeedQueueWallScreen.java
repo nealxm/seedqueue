@@ -87,7 +87,7 @@ public class SeedQueueWallScreen extends Screen {
         super(LiteralText.EMPTY);
         this.createWorldScreen = createWorldScreen;
         this.debugHud = SeedQueue.config.showDebugMenu ? new DebugHud(MinecraftClient.getInstance()) : null;
-        this.preparingPreviews = new ArrayList<>(SeedQueue.config.getBackgroundPreviews());
+        this.preparingPreviews = new ArrayList<>(SeedQueue.config.getBackgroundPreviews().orElse(0));
         this.lastSettingsCache = this.settingsCache = SeedQueueSettingsCache.create();
     }
 
@@ -379,7 +379,8 @@ public class SeedQueueWallScreen extends Screen {
 
     private void updatePreparingPreviews() {
         int urgent = (int) Arrays.stream(this.mainPreviews).filter(Objects::isNull).count() - Math.min(this.blockedMainPositions.size(), this.preparingPreviews.size());
-        int capacity = SeedQueue.config.getBackgroundPreviews() + urgent;
+        int capacity = SeedQueue.config.getBackgroundPreviews().map(value -> value + urgent).orElse(urgent);
+
         if (this.preparingPreviews.size() < capacity) {
             int budget = Math.max(1, urgent);
 
