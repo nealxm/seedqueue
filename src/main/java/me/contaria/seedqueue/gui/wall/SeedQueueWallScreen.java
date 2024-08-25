@@ -54,7 +54,7 @@ public class SeedQueueWallScreen extends Screen {
     protected final SeedQueueSettingsCache settingsCache;
     private SeedQueueSettingsCache lastSettingsCache;
 
-    public static final Layout layout = Layout.createLayout();
+    private Layout layout;
     private SeedQueuePreview[] mainPreviews;
     @Nullable
     private List<SeedQueuePreview> lockedPreviews;
@@ -87,16 +87,17 @@ public class SeedQueueWallScreen extends Screen {
         super(LiteralText.EMPTY);
         this.createWorldScreen = createWorldScreen;
         this.debugHud = SeedQueue.config.showDebugMenu ? new DebugHud(MinecraftClient.getInstance()) : null;
-        this.preparingPreviews = new ArrayList<>(SeedQueue.config.getBackgroundPreviews());
+        this.preparingPreviews = new ArrayList<>();
         this.lastSettingsCache = this.settingsCache = SeedQueueSettingsCache.create();
     }
 
     @Override
     protected void init() {
         assert this.client != null;
-        this.mainPreviews = new SeedQueuePreview[layout.main.size()];
-        this.lockedPreviews = layout.locked != null ? new ArrayList<>() : null;
-        this.preparingPreviews = new ArrayList<>();
+        this.layout = Layout.createLayout();
+        this.mainPreviews = new SeedQueuePreview[this.layout.main.size()];
+        this.lockedPreviews = this.layout.locked != null ? new ArrayList<>() : null;
+        this.preparingPreviews = new ArrayList<>(getBackgroundPreviews());
         this.lockTextures = LockTexture.createLockTextures();
         this.background = AnimatedTexture.of(WALL_BACKGROUND);
         this.overlay = AnimatedTexture.of(WALL_OVERLAY);
@@ -125,18 +126,18 @@ public class SeedQueueWallScreen extends Screen {
         }
 
         SeedQueueProfiler.swap("render_main");
-        for (int i = 0; i < layout.main.size(); i++) {
-            this.renderInstance(this.mainPreviews[i], layout.main, layout.main.getPos(i), matrices, delta);
+        for (int i = 0; i < this.layout.main.size(); i++) {
+            this.renderInstance(this.mainPreviews[i], this.layout.main, this.layout.main.getPos(i), matrices, delta);
         }
-        if (layout.locked != null && this.lockedPreviews != null) {
+        if (this.layout.locked != null && this.lockedPreviews != null) {
             SeedQueueProfiler.swap("render_locked");
-            for (int i = 0; i < layout.locked.size(); i++) {
-                this.renderInstance(i < this.lockedPreviews.size() ? this.lockedPreviews.get(i) : null, layout.locked, layout.locked.getPos(i), matrices, delta);
+            for (int i = 0; i < this.layout.locked.size(); i++) {
+                this.renderInstance(i < this.lockedPreviews.size() ? this.lockedPreviews.get(i) : null, this.layout.locked, this.layout.locked.getPos(i), matrices, delta);
             }
         }
         int i = 0;
         SeedQueueProfiler.swap("render_preparing");
-        for (Layout.Group group : layout.preparing) {
+        for (Layout.Group group : this.layout.preparing) {
             int offset = i;
             for (; i < group.size(); i++) {
                 this.renderInstance(i < this.preparingPreviews.size() ? this.preparingPreviews.get(i) : null, group, group.getPos(i - offset), matrices, delta);
@@ -179,7 +180,7 @@ public class SeedQueueWallScreen extends Screen {
             this.setViewport(pos);
             if (instance == null || (SeedQueue.config.waitForPreviewSetup && !instance.isPreviewReady())) {
                 SeedQueueProfiler.swap("instance_background");
-                if (!SeedQueue.config.waitForPreviewSetup && layout.main == group) {
+                if (!SeedQueue.config.waitForPreviewSetup && this.layout.main == group) {
                     this.renderBackground(matrices);
                 } else if (group.instance_background && this.instanceBackground != null) {
                     this.drawAnimatedTexture(this.instanceBackground, matrices, 0, 0, this.width, this.height);
@@ -322,7 +323,7 @@ public class SeedQueueWallScreen extends Screen {
             if (instance != null && instance.getSeedQueueEntry().isLocked()) {
                 this.addLockedPreview(instance);
                 this.mainPreviews[i] = null;
-                if (!layout.replaceLockedInstances) {
+                if (!this.layout.replaceLockedInstances) {
                     this.blockedMainPositions.add(i);
                 }
             }
@@ -378,7 +379,7 @@ public class SeedQueueWallScreen extends Screen {
 
     private void updatePreparingPreviews() {
         int urgent = (int) Arrays.stream(this.mainPreviews).filter(Objects::isNull).count() - Math.min(this.blockedMainPositions.size(), this.preparingPreviews.size());
-        int capacity = SeedQueue.config.getBackgroundPreviews() + urgent;
+        int capacity = getBackgroundPreviews() + urgent;
         if (this.preparingPreviews.size() < capacity) {
             int budget = Math.max(1, urgent);
 
@@ -399,6 +400,15 @@ public class SeedQueueWallScreen extends Screen {
         } else {
             clearWorldRenderer(getClearableWorldRenderer());
         }
+    }
+
+    private int getBackgroundPreviews() {
+        return SeedQueue.config.getBackgroundPreviews().orElseGet(() -> {
+            int mainGroupSize = this.layout.main.size();
+            int preparingGroupSize = Layout.Group.totalSize(this.layout.preparing);
+
+            return Math.min(mainGroupSize + preparingGroupSize, SeedQueue.config.maxCapacity - mainGroupSize);
+        });
     }
 
     private List<SeedQueueEntry> getAvailableSeedQueueEntries() {
@@ -558,19 +568,19 @@ public class SeedQueueWallScreen extends Screen {
         double y = mouseY * scale;
 
         // we traverse the layout in reverse to catch the top rendered instance
-        for (int i = layout.preparing.length - 1; i >= 0; i--) {
-            Optional<SeedQueuePreview> instance = this.getInstance(layout.preparing[i], x, y).filter(index -> index < this.preparingPreviews.size()).map(this.preparingPreviews::get);
+        for (int i = this.layout.preparing.length - 1; i >= 0; i--) {
+            Optional<SeedQueuePreview> instance = this.getInstance(this.layout.preparing[i], x, y).filter(index -> index < this.preparingPreviews.size()).map(this.preparingPreviews::get);
             if (instance.isPresent()) {
                 return instance.get();
             }
         }
-        if (layout.locked != null && this.lockedPreviews != null) {
-            Optional<SeedQueuePreview> instance = this.getInstance(layout.locked, x, y).filter(index -> index < this.lockedPreviews.size()).map(this.lockedPreviews::get);
+        if (this.layout.locked != null && this.lockedPreviews != null) {
+            Optional<SeedQueuePreview> instance = this.getInstance(this.layout.locked, x, y).filter(index -> index < this.lockedPreviews.size()).map(this.lockedPreviews::get);
             if (instance.isPresent()) {
                 return instance.get();
             }
         }
-        return this.getInstance(layout.main, x, y).map(index -> this.mainPreviews[index]).orElse(null);
+        return this.getInstance(this.layout.main, x, y).map(index -> this.mainPreviews[index]).orElse(null);
     }
 
     private Optional<Integer> getInstance(Layout.Group group, double mouseX, double mouseY) {
@@ -700,7 +710,7 @@ public class SeedQueueWallScreen extends Screen {
         double x = mouseX * this.client.getWindow().getScaleFactor();
         boolean playSound = !this.playSound(SeedQueueSounds.RESET_COLUMN);
         for (int i = 0; i < this.mainPreviews.length; i++) {
-            Layout.Pos pos = layout.main.getPos(i);
+            Layout.Pos pos = this.layout.main.getPos(i);
             if (x >= pos.x && x <= pos.x + pos.width) {
                 this.resetInstance(this.mainPreviews[i], false, false, playSound);
             }
@@ -712,7 +722,7 @@ public class SeedQueueWallScreen extends Screen {
         double y = mouseY * this.client.getWindow().getScaleFactor();
         boolean playSound = !this.playSound(SeedQueueSounds.RESET_ROW);
         for (int i = 0; i < this.mainPreviews.length; i++) {
-            Layout.Pos pos = layout.main.getPos(i);
+            Layout.Pos pos = this.layout.main.getPos(i);
             if (y >= pos.y && y <= pos.y + pos.height) {
                 this.resetInstance(this.mainPreviews[i], false, false, playSound);
             }

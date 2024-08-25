@@ -6,7 +6,6 @@ import com.google.gson.JsonPrimitive;
 import me.contaria.seedqueue.compat.ModCompat;
 import me.contaria.seedqueue.gui.config.SeedQueueKeybindingsScreen;
 import me.contaria.seedqueue.gui.config.SeedQueueWindowSizeWidget;
-import me.contaria.seedqueue.gui.wall.SeedQueueWallScreen;
 import me.contaria.seedqueue.keybindings.SeedQueueKeyBindings;
 import me.contaria.seedqueue.keybindings.SeedQueueMultiKeyBinding;
 import net.minecraft.client.MinecraftClient;
@@ -29,6 +28,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Config class based on SpeedrunAPI, initialized on prelaunch.
@@ -107,7 +107,7 @@ public class SeedQueueConfig implements SpeedrunConfig {
 
     @Config.Category("performance")
     @Config.Numbers.Whole.Bounds(min = -1, max = 30)
-    public int backgroundPreviews = -1;
+    public int backgroundPreviews = -1; // auto
 
     @Config.Category("performance")
     public boolean freezeLockedPreviews = false;
@@ -182,18 +182,11 @@ public class SeedQueueConfig implements SpeedrunConfig {
         SeedQueue.config = this;
     }
 
-    /**
-     * Calculates a sane default for background previews if set to -1, works same as {@link SeedQueueConfig#AUTO}.
-     *
-     * @return The amount of background previews to be shown on the Wall Screen.
-     */
-    public int getBackgroundPreviews() {
+    public Optional<Integer> getBackgroundPreviews() {
         if (this.backgroundPreviews == -1) {
-            int mainGroupSize = SeedQueueWallScreen.layout.main.size();
-            int preparingGroupSize = SeedQueueWallScreen.layout.preparing.length;
-            return Math.min(mainGroupSize + preparingGroupSize, this.maxCapacity - mainGroupSize);
+            return Optional.empty();
         }
-        return this.backgroundPreviews;
+        return Optional.of(this.backgroundPreviews);
     }
 
     /**
