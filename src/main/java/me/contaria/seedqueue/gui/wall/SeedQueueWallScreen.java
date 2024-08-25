@@ -97,7 +97,7 @@ public class SeedQueueWallScreen extends Screen {
         this.layout = Layout.createLayout();
         this.mainPreviews = new SeedQueuePreview[this.layout.main.size()];
         this.lockedPreviews = this.layout.locked != null ? new ArrayList<>() : null;
-        this.preparingPreviews = new ArrayList<>(getBackgroundPreviews());
+        this.preparingPreviews = new ArrayList<>();
         this.lockTextures = LockTexture.createLockTextures();
         this.background = AnimatedTexture.of(WALL_BACKGROUND);
         this.overlay = AnimatedTexture.of(WALL_OVERLAY);
@@ -407,7 +407,7 @@ public class SeedQueueWallScreen extends Screen {
             int mainGroupSize = this.layout.main.size();
             int preparingGroupSize = Layout.Group.totalSize(this.layout.preparing);
 
-            return Math.min(mainGroupSize + preparingGroupSize, SeedQueue.config.maxCapacity - mainGroupSize);
+            return Math.min(Math.max(mainGroupSize, preparingGroupSize), SeedQueue.config.maxCapacity - mainGroupSize);
         });
     }
 
